@@ -53,6 +53,10 @@
                 background-image: $active_gradient;
             }
         }
+
+        &.focused image, &:hover image {
+            -gtk-icon-shadow: $text_shadow;
+        }
     }
 }
 
@@ -60,6 +64,10 @@
     @include dock;
     @include floating_widget;
     padding: $spacing;
+
+    image {
+        -gtk-icon-size: 42px;
+    }
 }
 
 .dock.vertical {

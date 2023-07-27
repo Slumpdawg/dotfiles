@@ -34,23 +34,23 @@ Widget.widgets['hyprland/workspaces'] = ({
     };
 
     const forFixed = box => {
-        box.get_children().forEach(ch => ch.destroy());
+        box.removeChildren();
         const { workspaces } = Hyprland;
-        for (let i=1; i<fixed+1; ++i) {
+        for (let i = 1; i < fixed + 1; ++i) {
             if (workspaces.has(i)) {
                 const { windows } = workspaces.get(i);
-                box.add(button(windows, i));
+                box.append(button(windows, i));
             } else {
-                box.add(button(0, i));
+                box.append(button(0, i));
             }
         }
     };
 
     const forMonitors = box => {
-        box.get_children().forEach(ch => ch.destroy());
+        box.removeChildren();
         Hyprland.workspaces.forEach(({ id, windows, monitor }) => {
             if (monitors.includes(Hyprland.monitors.get(monitor).id))
-                box.add(button(windows, id));
+                box.append(button(windows, id));
         });
     };
 
@@ -59,7 +59,6 @@ Widget.widgets['hyprland/workspaces'] = ({
         type: 'box',
         connections: [[Hyprland, box => {
             fixed ? forFixed(box) : forMonitors(box);
-            box.show_all();
         }]],
     });
 };
@@ -128,7 +127,7 @@ Widget.widgets['hyprland/client-icon'] = ({
 const _item = ({ iconName }, { address, title }) => ({
     type: 'button',
     child: { type: 'icon', icon: iconName },
-    tooltip: title,
+    // tooltip: title,
     className: Hyprland.active.client.address === address.substring(2) ? 'focused' : 'nonfocused',
     onClick: () => execAsync(`hyprctl dispatch focuswindow address:${address}`),
 });
@@ -147,7 +146,7 @@ Widget.widgets['hyprland/taskbar'] = ({
             if (windowName && !App.getWindow(windowName).visible)
                 return;
 
-            box.get_children().forEach(ch => ch.destroy());
+            box.removeChildren();
             Hyprland.clients.forEach(client => {
                 for (const appName of skip) {
                     if (client.class.toLowerCase().includes(appName.toLowerCase()))
@@ -155,12 +154,11 @@ Widget.widgets['hyprland/taskbar'] = ({
                 }
                 for (const app of box._apps) {
                     if (client.title && app.match(client.title) || client.class && app.match(client.class)) {
-                        box.add(Widget(item(app, client)));
+                        box.append(Widget(item(app, client)));
                         return;
                     }
                 }
             });
-            box.show_all();
         }],
     ],
 });

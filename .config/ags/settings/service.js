@@ -7,7 +7,7 @@ const { defaults } = imports.settings.defaults;
 class SettingsService extends Service {
     static { Service.register(this); }
 
-    _path = CONFIG_DIR+'/settings.json';
+    _path = CONFIG_DIR + '/settings.json';
     _open = false;
 
     constructor() {
@@ -34,7 +34,7 @@ class SettingsService extends Service {
 
         this._dialog = imports.settings.dialog.dialog();
         this._dialog.connect('destroy', () => this._dialog = null);
-        this._dialog.show_all();
+        this._dialog.present();
     }
 
     setSetting(name, value) {
@@ -84,7 +84,7 @@ class SettingsService extends Service {
         execAsync(`hyprctl keyword decoration:rounding ${getValue('radii')}`);
         execAsync(`hyprctl keyword general:border_size ${getValue('border_width')}`);
         execAsync(`hyprctl keyword general:gaps_out ${getValue('wm_gaps')}`);
-        execAsync(`hyprctl keyword general:gaps_in ${getValue('wm_gaps')/2}`);
+        execAsync(`hyprctl keyword general:gaps_in ${getValue('wm_gaps') / 2}`);
 
         exec(`sassc ${CONFIG_DIR}/scss/dark.scss ${CONFIG_DIR}/dark.css`);
         exec(`sassc ${CONFIG_DIR}/scss/light.scss ${CONFIG_DIR}/light.css`);

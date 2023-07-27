@@ -22,10 +22,6 @@ Widget.widgets['mpris/box'] = ({ player = prefer, ...props }) => {
         type: 'box',
         connections: [[Mpris, box => box.visible = Mpris.getPlayer(player)]],
     });
-    const id = box.connect('draw', () => {
-        box.visible = Mpris.getPlayer(player);
-        box.disconnect(id);
-    });
     return box;
 };
 
@@ -37,7 +33,7 @@ Widget.widgets['mpris/cover-art'] = ({ player = prefer, ...props }) => Widget({
         if (!url)
             return;
 
-        box.setStyle(`background-image: url("${url}")`);
+        box.setStyle(`background-image: url(file://${url});`);
     }]],
 });
 
@@ -54,13 +50,13 @@ Widget.widgets['mpris/blurred-cover-art'] = ({ player = prefer, ...props }) => W
             url.substring(MEDIA_CACHE_PATH.length);
 
         if (GLib.file_test(blurred, GLib.FileTest.EXISTS)) {
-            box.setStyle(`background-image: url("${blurred}")`);
+            box.setStyle(`background-image: url(file://${blurred});`);
             return;
         }
 
         ensureDirectory(blurredPath);
         execAsync(['convert', url, '-blur', '0x22', blurred], () => {
-            box.setStyle(`background-image: url("${blurred}")`);
+            box.setStyle(`background-image: url(file://${blurred});`);
         });
     }]],
 });
@@ -122,18 +118,26 @@ Widget.widgets['mpris/volume-slider'] = ({ player = prefer, ...props }) => Widge
 });
 
 Widget.widgets['mpris/volume-icon'] = ({ player = prefer, items }) => Widget({
-    type: 'dynamic',
+    type: 'stack',
     items: items || [
-        { value: 67, widget: { type: 'icon', label: 'audio-volume-high-symbolic' } },
-        { value: 34, widget: { type: 'icon', label: 'audio-volume-medium-symbolic' } },
-        { value: 1, widget: { type: 'icon', label: 'audio-volume-low-symbolic' } },
-        { value: 0, widget: { type: 'icon', label: 'audio-volume-muted-symbolic' } },
+        [67, { type: 'icon', label: 'audio-volume-high-symbolic' }],
+        [34, { type: 'icon', label: 'audio-volume-medium-symbolic' }],
+        [1, { type: 'icon', label: 'audio-volume-low-symbolic' }],
+        [0, { type: 'icon', label: 'audio-volume-muted-symbolic' }],
     ],
-    connections: [[Mpris, dynamic => {
+    connections: [[Mpris, stack => {
         const mpris = Mpris.getPlayer(player);
-        dynamic.visible = mpris?.volume >= 0;
-        const value = mpris?.volume || 0;
-        dynamic.update(threshold => threshold <= value * 100);
+        stack.visible = mpris?.volume >= 0;
+        const value = mpris?.volume * 100;
+        stack.showChild(() => {
+            if (value > 66)
+                return '67';
+            if (value > 33)
+                return '34';
+            if (value > 0)
+                return '1';
+            return '0';
+        });
     }]],
 });
 
@@ -229,15 +233,15 @@ Widget.widgets['mpris/slash'] = ({ player = prefer, ...props }) => Widget({
 const _playerButton = ({ player = prefer, items, onClick, prop, canProp, cantValue, ...rest }) => Widget({
     ...rest,
     type: 'button',
-    child: { type: 'dynamic', items },
+    child: { type: 'stack', items },
     onClick: () => Mpris.getPlayer(player)?.[onClick](),
     connections: [[Mpris, button => {
         const mpris = Mpris.getPlayer(player);
         if (!mpris || mpris[canProp] === cantValue)
             return button.hide();
 
-        button.show();
-        button.get_child().update(value => value === mpris[prop]);
+        button.visible = true;
+        button.get_child().showChild(`${mpris[prop]}`);
     }]],
 });
 
@@ -250,8 +254,8 @@ Widget.widgets['mpris/shuffle-button'] = ({
     ...props,
     player,
     items: [
-        { value: true, widget: enabled },
-        { value: false, widget: disabled },
+        ['true', enabled],
+        ['false', disabled],
     ],
     onClick: 'shuffle',
     prop: 'shuffleStatus',
@@ -269,9 +273,9 @@ Widget.widgets['mpris/loop-button'] = ({
     ...props,
     player,
     items: [
-        { value: 'None', widget: none },
-        { value: 'Track', widget: track },
-        { value: 'Playlist', widget: playlist },
+        ['None', none],
+        ['Track', track],
+        ['Playlist', playlist],
     ],
     onClick: 'loop',
     prop: 'loopStatus',
@@ -289,9 +293,9 @@ Widget.widgets['mpris/play-pause-button'] = ({
     ...props,
     player,
     items: [
-        { value: 'Playing', widget: playing },
-        { value: 'Paused', widget: paused },
-        { value: 'Stopped', widget: stopped },
+        ['Playing', playing],
+        ['Paused', paused],
+        ['Stopped', stopped],
     ],
     onClick: 'playPause',
     prop: 'playBackStatus',
@@ -307,7 +311,7 @@ Widget.widgets['mpris/previous-button'] = ({
     ...props,
     player,
     items: [
-        { value: true, widget: child },
+        ['true', child],
     ],
     onClick: 'previous',
     prop: 'canGoPrev',
@@ -323,7 +327,7 @@ Widget.widgets['mpris/next-button'] = ({
     ...props,
     player,
     items: [
-        { value: true, widget: child },
+        ['true', child],
     ],
     onClick: 'next',
     prop: 'canGoNext',

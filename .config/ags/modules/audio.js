@@ -17,25 +17,36 @@ const iconSubstitute = item => {
 
 Widget.widgets['audio/speaker-indicator'] = ({
     items = [
-        { value: 101, widget: { type: 'icon', icon: 'audio-volume-overamplified-symbolic' } },
-        { value: 67, widget: { type: 'icon', icon: 'audio-volume-high-symbolic' } },
-        { value: 34, widget: { type: 'icon', icon: 'audio-volume-medium-symbolic' } },
-        { value: 1, widget: { type: 'icon', icon: 'audio-volume-low-symbolic' } },
-        { value: 0, widget: { type: 'icon', icon: 'audio-volume-muted-symbolic' } },
+        ['101', { type: 'icon', icon: 'audio-volume-overamplified-symbolic' }],
+        ['67', { type: 'icon', icon: 'audio-volume-overamplified-symbolic' }],
+        ['34', { type: 'icon', icon: 'audio-volume-medium-symbolic' }],
+        ['1', { type: 'icon', icon: 'audio-volume-low-symbolic' }],
+        ['0', { type: 'icon', icon: 'audio-volume-muted-symbolic' }],
     ],
     ...props
 }) => Widget({
     ...props,
-    type: 'dynamic',
+    type: 'stack',
     items,
-    connections: [[Audio, dynamic => dynamic.update(value => {
-        if (!Audio.speaker)
-            return;
+    connections: [[Audio, stack => stack.showChild(() => {
+        stack.visible = !!Audio.speaker;
+        if (!Audio.speaker || Audio.speaker.isMuted)
+            return '0';
 
-        if (Audio.speaker.isMuted)
-            return value === 0;
+        const vol = Audio.speaker.volume * 100;
+        if (vol > 100)
+            return '101';
 
-        return value <= (Audio.speaker.volume * 100);
+        if (vol > 66)
+            return '67';
+
+        if (vol > 33)
+            return '34';
+
+        if (vol > 0)
+            return '1';
+
+        return '0';
     }), 'speaker-changed']],
 });
 
@@ -78,14 +89,14 @@ Widget.widgets['audio/microphone-mute-indicator'] = ({
     ...props
 }) => Widget({
     ...props,
-    type: 'dynamic',
+    type: 'stack',
     items: [
-        { value: true, widget: muted },
-        { value: false, widget: unmuted },
+        ['muted', muted],
+        ['unmuted', unmuted],
     ],
-    connections: [[Audio, dynamic => {
-        dynamic.update(value => value === Audio.microphone?.isMuted);
-    }, 'microphone-changed']],
+    connections: [[Audio, stack => stack.showChild(
+        Audio.microphone?.isMuted ? 'muted' : 'unmuted',
+    ), 'microphone-changed']],
 });
 
 Widget.widgets['audio/microphone-mute-toggle'] = props => Widget({
@@ -133,7 +144,7 @@ Widget.widgets['audio/app-mixer'] = ({ item, ...props }) => {
         });
         box.update = () => {
             icon.icon_name = stream.iconName;
-            icon.set_tooltip_text(stream.name);
+            // icon.set_tooltip_text(stream.name);
             slider.set_value(stream.volume);
             percent.label = `${Math.floor(stream.volume * 100)}%`;
             stream.description?.length > 40
@@ -148,16 +159,14 @@ Widget.widgets['audio/app-mixer'] = ({ item, ...props }) => {
         type: 'box',
         orientation: 'vertical',
         connections: [[Audio, box => {
-            box.get_children().forEach(ch => ch.destroy());
+            box.removeChildren();
             for (const [, stream] of Audio.apps) {
                 const app = item(stream);
-                box.add(app);
+                box.append(app);
                 const id = stream.connect('changed', () => app.update());
                 app.connect('destroy', () => stream.disconnect(id));
                 app.update();
             }
-
-            box.show_all();
         }]],
     });
 };
@@ -167,9 +176,9 @@ Widget.widgets['audio/stream-selector'] = ({ streams = 'speakers', ...props }) =
     type: 'box',
     orientation: 'vertical',
     connections: [[Audio, box => {
-        box.get_children().forEach(ch => ch.destroy());
+        box.removeChildren();
         for (const [, stream] of Audio[streams]) {
-            box.add(Widget({
+            box.append(Widget({
                 type: 'button',
                 child: {
                     type: 'box',
@@ -177,7 +186,7 @@ Widget.widgets['audio/stream-selector'] = ({ streams = 'speakers', ...props }) =
                         {
                             type: 'icon',
                             icon: iconSubstitute(stream.iconName),
-                            tooltip: stream.iconName,
+                            // tooltip: stream.iconName,
                         },
                         {
                             type: 'label',
@@ -188,9 +197,7 @@ Widget.widgets['audio/stream-selector'] = ({ streams = 'speakers', ...props }) =
                             icon: 'object-select-symbolic',
                             hexpand: true,
                             halign: 'end',
-                            connections: [['draw', icon => {
-                                icon.visible = Audio.speaker === stream;
-                            }]],
+                            visible: Audio.speaker === stream,
                         },
                     ],
                 },
@@ -203,7 +210,5 @@ Widget.widgets['audio/stream-selector'] = ({ streams = 'speakers', ...props }) =
                 },
             }));
         }
-
-        box.show_all();
     }]],
 });

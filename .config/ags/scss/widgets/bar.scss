@@ -1,4 +1,4 @@
-$float: 5px;
+$float: $spacing/2;
 
 @mixin panel_button($flat: false, $reactive: true){
     @include accs_button($flat, $reactive);
@@ -8,16 +8,25 @@ $float: 5px;
     }
 
     > * {
-        margin: $float;
-        padding: .3em .5em;
+        margin: $float 0;
+        padding: 0 .6em;
     }
 }
 
-.panel {
+window .panel {
     background-color: $bg_color;
+    min-height: $font-size*2.4;
 
     @if not $screen_corners {
         border-bottom: $border;
+    }
+
+    .left > *:first-child {
+        padding-left: $float;
+    }
+
+    .right > *:last-child {
+        padding-right: $float;
     }
 
     .panel-button {
@@ -39,10 +48,13 @@ $float: 5px;
         border-radius: $radii;
         min-height: 5px;
         min-width: 5px;
+        margin: 0 4px;
     }
 
     .launcher {
-        color: transparentize($accent, 0.2);
+        label {
+            color: transparentize($accent, 0.2);
+        }
 
         &:hover label {
             color: $accent;
@@ -71,10 +83,8 @@ $float: 5px;
     }
 
     .workspaces {
-        border: $float solid transparent;
-
-        .eventbox {
-            @include button;
+        > * {
+            padding: 0;
         }
 
         button {

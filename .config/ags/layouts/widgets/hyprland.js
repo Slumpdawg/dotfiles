@@ -10,23 +10,16 @@ const indicator = {
     }],
 };
 
-Widget.widgets['workspaces'] = props => Widget({
+Widget.widgets['workspaces/panel-button'] = props => Widget({
     ...props,
+    className: 'panel-button',
     type: 'box',
     children: [{
-        type: 'eventbox',
-        className: 'eventbox',
-        child: {
-            type: 'hyprland/workspaces',
-            fixed: 7,
-            active: {
-                type: 'eventbox',
-                child: indicator,
-                onClick: () => print('hello'),
-            },
-            occupied: indicator,
-            empty: indicator,
-        },
+        type: 'hyprland/workspaces',
+        fixed: 7,
+        active: indicator,
+        occupied: indicator,
+        empty: indicator,
     }],
 });
 

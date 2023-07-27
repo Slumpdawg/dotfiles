@@ -7,7 +7,7 @@ Widget.widgets['wallpaper'] = props => Widget({
     className: 'wallpaper',
     connections: [[Settings, box => {
         box.setStyle(`
-            background-image: url('${Settings.wallpaper}');
+            background-image: url(file://${Settings.wallpaper});
             background-size: cover;
         `);
     }]],

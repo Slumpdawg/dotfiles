@@ -56,32 +56,30 @@ Widget.widgets['mediabox'] = ({ player = prefer, ...props }) => Widget({
                     {
                         type: 'centerbox',
                         className: 'footer-box',
-                        children: [
-                            {
-                                type: 'box',
-                                children: [
-                                    { type: 'mpris/position-label', player },
-                                    { type: 'mpris/slash', player },
-                                    { type: 'mpris/length-label', player },
-                                ],
-                            },
-                            {
-                                className: 'controls',
-                                type: 'box',
-                                children: [
-                                    { type: 'mpris/shuffle-button', player },
-                                    { type: 'mpris/previous-button', player },
-                                    { type: 'mpris/play-pause-button', player },
-                                    { type: 'mpris/next-button', player },
-                                    { type: 'mpris/loop-button', player },
-                                ],
-                            },
-                            {
-                                type: 'mpris/player-icon', player,
-                                hexpand: true,
-                                halign: 'end',
-                            },
-                        ],
+                        startWidget: {
+                            type: 'box',
+                            children: [
+                                { type: 'mpris/position-label', player },
+                                { type: 'mpris/slash', player },
+                                { type: 'mpris/length-label', player },
+                            ],
+                        },
+                        centerWidget: {
+                            className: 'controls',
+                            type: 'box',
+                            children: [
+                                { type: 'mpris/shuffle-button', player },
+                                { type: 'mpris/previous-button', player },
+                                { type: 'mpris/play-pause-button', player },
+                                { type: 'mpris/next-button', player },
+                                { type: 'mpris/loop-button', player },
+                            ],
+                        },
+                        endWidget: {
+                            type: 'mpris/player-icon', player,
+                            hexpand: true,
+                            halign: 'end',
+                        },
                     },
                 ],
             }],
@@ -102,7 +100,7 @@ Widget.widgets['media/popup-content'] = props => Widget({
 Widget.widgets['media/panel-indicator'] = ({
     player = prefer,
     direction = 'left',
-    onClick = () => Mpris.getPlayer(player)?.playPause(),
+    onButtonPressed = () => Mpris.getPlayer(player)?.playPause(),
     ...props
 }) => Widget({
     ...props,
@@ -111,10 +109,9 @@ Widget.widgets['media/panel-indicator'] = ({
     children: [{
         type: 'hover-revealer',
         direction,
-        onClick,
+        onButtonPressed,
         onScrollUp: () => Mpris.getPlayer(player)?.next(),
         onScrollDown: () => Mpris.getPlayer(player)?.previous(),
-        onSecondaryClick: () => Mpris.getPlayer(player)?.playPause(),
         indicator: { type: 'mpris/player-icon', player },
         child: {
             type: 'box',

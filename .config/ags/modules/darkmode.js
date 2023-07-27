@@ -13,12 +13,10 @@ Widget.widgets['darkmode/toggle'] = props => Widget({
 
 Widget.widgets['darkmode/indicator'] = props => Widget({
     ...props,
-    type: 'dynamic',
+    type: 'stack',
     items: [
-        { value: false, widget: { type: 'icon', icon: 'weather-clear-symbolic' } },
-        { value: true, widget: { type: 'icon', icon: 'weather-clear-night-symbolic' } },
+        ['on', { type: 'icon', icon: 'weather-clear-symbolic' }],
+        ['off', { type: 'icon', icon: 'weather-clear-night-symbolic' }],
     ],
-    connections: [[Settings, dynamic => {
-        dynamic.update(value => value === Settings.darkmode);
-    }]],
+    connections: [[Settings, stack => stack.showChild(Settings.darkmode ? 'on' : 'off')]],
 });

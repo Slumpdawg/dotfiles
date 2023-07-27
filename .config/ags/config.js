@@ -6,8 +6,6 @@ Object.keys(imports.modules).forEach(m => imports.modules[m]);
 Object.keys(imports.layouts.widgets).forEach(m => imports.layouts.widgets[m]);
 
 var config = {
-    baseIconSize: 20,
-    stackTraceOnError: true,
     closeWindowDelay: {
         'dashboard': 350,
         'quicksettings': 350,
@@ -18,7 +16,7 @@ var config = {
         ])).flat(),
         imports.layouts.shared.powermenu,
         imports.layouts.shared.verification,
-        imports.layouts.shared.overview,
+        // imports.layouts.shared.overview,
         imports.layouts.shared.applauncher,
 
         ...imports.layouts[layout].windows,
@@ -26,7 +24,8 @@ var config = {
 };
 
 ags.App.instance.connect('config-parsed', () => {
-    for (const [name] of ags.App.windows) {
+    for (const [name, win] of ags.App.windows) {
+        win.toggleClassName('ags-window');
         if (!name.includes('desktop')) {
             exec(`hyprctl keyword layerrule "unset, ${name}"`);
             exec(`hyprctl keyword layerrule "blur, ${name}"`);

@@ -43,14 +43,14 @@ Widget.widgets['asusctl/profile-indicator'] = ({
     quiet = { type: 'icon', icon: 'power-profile-power-saver-symbolic' },
     performance = { type: 'icon', icon: 'power-profile-performance-symbolic' },
 }) => Widget({
-    type: 'dynamic',
-    tooltip: 'Power Profile',
+    type: 'stack',
+    // tooltip: 'Power Profile',
     items: [
-        { value: 'Balanced', widget: balanced },
-        { value: 'Quiet', widget: quiet },
-        { value: 'Performance', widget: performance },
+        ['Balanced', balanced],
+        ['Quiet', quiet],
+        ['Performance', performance],
     ],
-    connections: [[Asusctl, dynamic => dynamic.update(value => value === Asusctl.profile)]],
+    connections: [[Asusctl, stack => stack.showChild(Asusctl.profile)]],
 });
 
 Widget.widgets['asusctl/profile-toggle'] = props => Widget({
@@ -63,16 +63,16 @@ Widget.widgets['asusctl/profile-toggle'] = props => Widget({
 });
 
 Widget.widgets['asusctl/mode-indicator'] = ({
-    integrated = { type: 'font-icon', icon: '', fontSize: 24, tooltip: 'Integrated Mode' },
-    hybrid = { type: 'font-icon', icon: '󰢮', fontSize: 24, tooltip: 'Hybrid Mode' },
+    integrated = { type: 'font-icon', icon: '' /*, tooltip: 'Integrated Mode' */ },
+    hybrid = { type: 'font-icon', icon: '󰢮' /*, tooltip: 'Hybrid Mode' */ },
 }) => Widget({
-    type: 'dynamic',
+    type: 'stack',
     items: [
-        { value: 'Integrated', widget: integrated },
-        { value: 'Hybrid', widget: hybrid },
+        ['Integrated', integrated],
+        ['Hybrid', hybrid],
     ],
     halign: 'center', valign: 'center',
-    connections: [[Asusctl, w => w.update(v => v === Asusctl.mode)]],
+    connections: [[Asusctl, stack => stack.showChild(Asusctl.mode)]],
 });
 
 Widget.widgets['asusctl/mode-toggle'] = props => Widget({

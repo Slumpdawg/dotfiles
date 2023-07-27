@@ -2,34 +2,37 @@ window#dashboard .dashboard {
     @include floating_widget;
 
     .notifications {
-        @include notifications;
-        min-width: 450px;
+        min-width: 440px;
 
         .header {
             padding-left: .3em;
             margin-bottom: $spacing;
+
+            button {
+                @include button;
+                padding: .2em .4em;
+            }
         }
 
         .notification-list-box {
             @include widget;
 
-            .wallpaper {
-                border-radius: max($radii - $border_width,0 );
-                background-position: bottom right;
-                box-shadow: inset 0 0 $spacing 0 $shadow;
-            }
-        }
-
-        .notification-list {
-            viewport > box {
-                padding: $spacing/2;
-            }
-
-            .notification > box {
+            .notification {
+                @include notification;
                 @include floating_widget($shadow_width: $spacing/2);
                 border-radius: $radii;
                 padding: $spacing;
                 margin: $spacing/2;
+            }
+
+            .wallpaper {
+                border-radius: max($radii - $border_width,0 );
+                background-position: bottom right;
+                box-shadow: inset 0 0 $spacing 0 $shadow;
+
+                > * {
+                    margin: $spacing/2;
+                }
             }
         }
 
@@ -49,12 +52,5 @@ window#dashboard .dashboard {
 
     .datemenu {
         @include datemenu;
-    }
-
-    .mediabox {
-        @include widget;
-        @include media;
-        min-height: 140px;
-        margin-top: $spacing;
     }
 }

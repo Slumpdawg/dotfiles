@@ -34,7 +34,7 @@ const button = (icon, action) => ({
         type: 'box',
         orientation: 'vertical',
         children: [
-            { type: 'icon', className: 'icon', icon, size: 74 },
+            { type: 'icon', className: 'icon', icon },
             action,
         ],
     },

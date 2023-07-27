@@ -4,3 +4,5 @@ weather_key
 *.css
 settings.json
 scss/variables.scss
+gtk3
+gtk4

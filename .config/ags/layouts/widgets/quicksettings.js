@@ -44,8 +44,8 @@ const arrow = (menu, toggleOn) => ({
             if (QSMenu.opened === menu && !icon._opened || QSMenu.opened !== menu && icon._opened) {
                 const step = QSMenu.opened === menu ? 10 : -10;
                 icon._opened = !icon._opened;
-                for (let i=0; i<9; ++i) {
-                    timeout(5*i, () => {
+                for (let i = 0; i < 9; ++i) {
+                    timeout(5 * i, () => {
                         icon._deg += step;
                         icon.setStyle(`-gtk-icon-transform: rotate(${icon._deg}deg);`);
                     });
@@ -75,7 +75,7 @@ const avatar = {
             className: 'user',
             halign: 'start',
             valign: 'end',
-            connections: [[Settings, l => l.label = '@'+Settings.userName]],
+            connections: [[Settings, l => l.label = '@' + Settings.userName]],
         },
     }],
 };
@@ -84,7 +84,7 @@ const sysBtn = (icon, action, className = '') => ({
     type: 'button',
     className,
     onClick: () => ags.Service.System.action(action),
-    tooltip: action,
+    // tooltip: action,
     child: {
         type: 'icon',
         icon,
@@ -106,7 +106,7 @@ const systemBox = {
                     type: 'button',
                     className: 'settings',
                     onClick: () => { ags.App.toggleWindow('quicksettings'); Settings.openSettings(); },
-                    tooltip: 'Settings',
+                    // tooltip: 'Settings',
                     child: {
                         type: 'icon',
                         icon: 'org.gnome.Settings-symbolic',
@@ -127,31 +127,28 @@ const systemBox = {
             connections: [[Battery, d => {
                 d.toggleClassName('half', Battery.percent < 46);
             }]],
-            children: [
-                { type: 'battery/progress' },
+            child: { type: 'battery/progress' },
+            overlays: [
                 {
-                    type: 'dynamic',
+                    type: 'stack',
                     halign: 'center',
+                    clip: true,
                     items: [
-                        {
-                            value: true, widget: {
-                                type: 'font-icon',
-                                className: 'icon',
-                                icon: '󱐋',
-                            },
-                        },
-                        {
-                            value: false, widget: {
-                                type: 'label',
-                                className: 'percent',
-                                connections: [[Battery, l => {
-                                    l.label = `${Battery.percent}%`;
-                                }]],
-                            },
-                        },
+                        ['true', {
+                            type: 'font-icon',
+                            className: 'icon',
+                            icon: '󱐋',
+                        }],
+                        ['false', {
+                            type: 'label',
+                            className: 'percent',
+                            connections: [[Battery, l => {
+                                l.label = `${Battery.percent}%`;
+                            }]],
+                        }],
                     ],
-                    connections: [[Battery, d => {
-                        d.update(v => v === (Battery.charging || Battery.charged));
+                    connections: [[Battery, stack => {
+                        stack.showChild(`${Battery.charging || Battery.charged}`);
                     }]],
                 },
             ],
@@ -343,6 +340,7 @@ Widget.widgets['quicksettings/popup-content'] = () => Widget({
     className: 'quicksettings',
     orientation: 'vertical',
     hexpand: false,
+    vexpand: false,
     children: [
         {
             type: 'box',
@@ -419,15 +417,14 @@ Widget.widgets['quicksettings/panel-button'] = () => Widget({
             {
                 type: 'box',
                 connections: [[Bluetooth, box => {
-                    box.get_children().forEach(ch => ch.destroy());
+                    box.removeChildren();
                     for (const [, device] of Bluetooth.connectedDevices) {
-                        box.add(Widget({
+                        box.append(Widget({
                             type: 'hover-revealer',
-                            indicator: { type: 'icon', icon: device.iconName+'-symbolic' },
+                            indicator: { type: 'icon', icon: device.iconName + '-symbolic' },
                             child: { type: 'label', label: device.name },
                         }));
                     }
-                    box.show_all();
                     box.visible = Bluetooth.connectedDevices.size > 0;
                 }]],
             },

@@ -63,6 +63,7 @@ window#applauncher .applauncher{
 
         image {
             margin-right: $spacing;
+            -gtk-icon-size: 38px;
         }
 
         &:hover, &:focus {
@@ -71,7 +72,7 @@ window#applauncher .applauncher{
             }
 
             image {
-                -gtk-icon-shadow: 2px 2px $accent;
+                -gtk-icon-shadow: 2px 2px 2px $accent;
             }
         }
 

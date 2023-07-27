@@ -1,5 +1,5 @@
 const { Widget } = ags;
-const { timeout, getConfig, exec } = ags.Utils;
+const { timeout, exec } = ags.Utils;
 const { Settings } = ags.Service;
 
 Widget.widgets['separator'] = props => Widget({
@@ -10,29 +10,23 @@ Widget.widgets['separator'] = props => Widget({
 
 Widget.widgets['font-icon'] = ({
     icon,
-    size = getConfig().baseIconSize || 16,
-    scale = 1,
-    angle,
 }) => Widget({
     type: 'box',
+    hexpand: false, vexpand: false,
+    className: 'font-icon',
     children: [{
         type: 'overlay',
-        children: [
-            {
-                type: 'box',
-                style: `
-                    min-width: ${size}px;
-                    min-height: ${size}px;
-                `,
-            },
-            {
-                type: 'label',
-                label: icon,
-                angle,
-                style: `font-size: ${size * scale}px`,
-                halign: 'center', valign: 'center',
-            },
-        ],
+        child: {
+            hexpand: true, vexpand: true,
+            type: 'box',
+            className: 'size-box',
+        },
+        overlays: [{
+            type: 'label',
+            label: icon,
+            halign: 'center', valign: 'center',
+            clip: true,
+        }],
     }],
 });
 
@@ -63,7 +57,7 @@ Widget.widgets['avatar'] = ({ child, ...props }) => Widget({
     className: 'image',
     connections: [[Settings, box => {
         box.setStyle(`
-            background-image: url('${Settings.avatar}');
+            background-image: url(file://${Settings.avatar});
             background-size: cover;
             `);
     }]],
@@ -92,7 +86,26 @@ Widget.widgets['progress'] = ({ height = 18, width = 180, vertical = false, chil
         vexpand: !vertical,
         halign: vertical ? 'fill' : 'start',
         valign: vertical ? 'end' : 'fill',
-        children: [child],
+        children: [{
+            type: 'overlay',
+            halign: 'end',
+            valign: 'start',
+            style: `
+                min-width: ${vertical ? width : height}px;
+                min-height: ${vertical ? width : height}px;
+            `,
+            child: {
+                type: 'box',
+                hexpand: true,
+                vexpand: true,
+            },
+            overlays: [{
+                type: 'box',
+                children: [child],
+                halign: 'center',
+                valign: 'center',
+            }],
+        }],
     });
     const progress = Widget({
         ...props,
@@ -105,13 +118,14 @@ Widget.widgets['progress'] = ({ height = 18, width = 180, vertical = false, chil
         children: [fill],
     });
     progress.setValue = value => {
-        if (value < 0)
+        if (value < 0 || typeof value !== 'number')
             return;
 
         const axis = vertical ? 'height' : 'width';
         const axisv = vertical ? height : width;
         const min = vertical ? width : height;
-        const preferred = (axisv - min) * value + min;
+        const max = vertical ? height : width;
+        const preferred = Math.min((axisv - min) * value + min, max);
 
         if (!fill._size) {
             fill._size = preferred;
@@ -121,12 +135,12 @@ Widget.widgets['progress'] = ({ height = 18, width = 180, vertical = false, chil
 
         const frames = 10;
         const goal = preferred - fill._size;
-        const step = goal/frames;
+        const step = goal / frames;
 
-        for (let i=0; i<frames; ++i) {
-            timeout(5*i, () => {
+        for (let i = 0; i < frames; ++i) {
+            timeout(5 * i, () => {
                 fill._size += step;
-                fill.setStyle(`min-${axis}: ${fill._size}px`);
+                fill.setStyle(`min-${axis}: ${fill._size}px;`);
             });
         }
     };
@@ -134,38 +148,32 @@ Widget.widgets['progress'] = ({ height = 18, width = 180, vertical = false, chil
 };
 
 Widget.widgets['hover-revealer'] = ({ indicator, child, direction = 'left', connection, duration = 300, ...rest }) => Widget({
+    ...rest,
     type: 'box',
-    children: [{
-        ...rest,
-        type: 'eventbox',
-        onHover: w => {
-            if (w._open)
-                return;
+    onHoverEnter: w => {
+        if (w._open)
+            return;
 
-            w.get_child().get_children()[direction === 'down' || direction === 'right' ? 1 : 0].reveal_child = true;
-            timeout(duration, () => w._open = true);
-        },
-        onHoverLost: w => {
-            if (!w._open)
-                return;
+        w[`get_${direction === 'down' || direction === 'right' ? 'last' : 'first'}_child`]().reveal_child = true;
+        timeout(duration, () => w._open = true);
+    },
+    onHoverLeave: w => {
+        if (!w._open)
+            return;
 
-            w.get_child().get_children()[direction === 'down' || direction === 'right' ? 1 : 0].reveal_child = false;
-            w._open = false;
+        w[`get_${direction === 'down' || direction === 'right' ? 'last' : 'first'}_child`]().reveal_child = false;
+        w._open = false;
+    },
+    orientation: direction === 'down' || direction === 'up' ? 'vertical' : 'horizontal',
+    children: [
+        direction === 'down' || direction === 'right' ? indicator : null,
+        {
+            type: 'revealer',
+            transition: `slide_${direction}`,
+            connections: connection ? [connection] : undefined,
+            duration,
+            child,
         },
-        child: {
-            type: 'box',
-            orientation: direction === 'down' || direction === 'up' ? 'vertical' : 'horizontal',
-            children: [
-                direction === 'down' || direction === 'right' ? indicator : null,
-                {
-                    type: 'revealer',
-                    transition: `slide_${direction}`,
-                    connections: connection ? [connection] : undefined,
-                    duration,
-                    child,
-                },
-                direction === 'up' || direction === 'left' ? indicator : null,
-            ].filter(i => i),
-        },
-    }],
+        direction === 'up' || direction === 'left' ? indicator : null,
+    ].filter(i => i),
 });

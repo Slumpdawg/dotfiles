@@ -12,7 +12,7 @@ var notifications = (monitor, transition, anchor) => ({
 var desktop = monitor => ({
     monitor,
     name: `desktop${monitor}`,
-    anchor: ['top', 'bottom', 'left', 'right'],
+    anchor: 'top bottom left right',
     child: { type: 'desktop' },
     layer: 'background',
 });
@@ -21,7 +21,7 @@ var corners = monitor => ['topleft', 'topright', 'bottomleft', 'bottomright'].ma
     monitor,
     name: `corner${monitor}${place}`,
     className: 'corners',
-    anchor: [place.includes('top') ? 'top' : 'bottom', place.includes('right') ? 'right' : 'left'],
+    anchor: `${place.includes('top') ? 'top' : 'bottom'} ${place.includes('right') ? 'right' : 'left'}`,
     child: { type: 'corner', place },
 }));
 
@@ -30,37 +30,26 @@ var indicator = monitor => ({
     name: `indicator${monitor}`,
     className: 'indicator',
     layer: 'overlay',
-    anchor: ['right'],
+    anchor: 'right',
     child: { type: 'on-screen-indicator' },
 });
 
 var dock = monitor => ({
     monitor,
     name: `dock${monitor}`,
-    anchor: ['bottom'],
+    anchor: 'bottom',
     child: { type: 'floating-dock' },
-});
-
-// bar
-var launcher = (size = ags.Utils.getConfig()?.baseIconSize || 16) => ({
-    type: 'button',
-    className: 'launcher panel-button',
-    connections: [[ags.App, (btn, win, visible) => {
-        btn.toggleClassName('active', win === 'overview' && visible);
-    }]],
-    onClick: () => ags.App.toggleWindow('overview'),
-    child: { type: 'distro-icon', size },
 });
 
 //popups
 const popup = (name, child) => ({
     name,
-    popup: true,
+    visible: false,
     focusable: true,
     child: {
-        type: 'layout',
+        type: 'popup',
         layout: 'center',
-        window: name,
+        windowName: name,
         child,
     },
 });

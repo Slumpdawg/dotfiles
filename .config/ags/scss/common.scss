@@ -1,3 +1,14 @@
+window.ags-window, window.ags-window * {
+    all: unset;
+    font-size: $font_size;
+    font-family: $font, sans-serif;
+}
+
+.font-icon .size-box {
+    min-width: $font-size;
+    min-height: $font-size;
+}
+
 @mixin widget{
     border-radius: $radii;
     color: $fg_color;

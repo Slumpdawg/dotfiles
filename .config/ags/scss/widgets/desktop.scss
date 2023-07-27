@@ -1,6 +1,7 @@
 .corners .corner {
-    background-color: if($screen_corners, $bg_color, transparent);
-    border-radius: $radii*2;
+    color: if($screen_corners, $bg_color, transparent);
+    min-width: $radii*2;
+    min-height: $radii*2;
 }
 
 .desktop {

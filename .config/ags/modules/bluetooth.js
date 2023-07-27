@@ -7,12 +7,12 @@ Widget.widgets['bluetooth/indicator'] = ({
     ...props
 }) => Widget({
     ...props,
-    type: 'dynamic',
+    type: 'stack',
     items: [
-        { value: true, widget: enabled },
-        { value: false, widget: disabled },
+        ['enabled', enabled],
+        ['disabled', disabled],
     ],
-    connections: [[Bluetooth, dynamic => dynamic.update(value => value === Bluetooth.enabled)]],
+    connections: [[Bluetooth, stack => stack.showChild(Bluetooth.enabled ? 'enabled' : 'disabled')]],
 });
 
 Widget.widgets['bluetooth/toggle'] = props => Widget({
@@ -44,9 +44,9 @@ Widget.widgets['bluetooth/devices'] = props => Widget({
     type: 'box',
     orientation: 'vertical',
     connections: [[Bluetooth, box => {
-        box.get_children().forEach(ch => ch.destroy());
+        box.removeChildren();
         for (const [, device] of Bluetooth.devices) {
-            box.add(Widget({
+            box.append(Widget({
                 type: 'box',
                 hexpand: false,
                 children: [
@@ -67,6 +67,5 @@ Widget.widgets['bluetooth/devices'] = props => Widget({
                 ],
             }));
         }
-        box.show_all();
     }]],
 });

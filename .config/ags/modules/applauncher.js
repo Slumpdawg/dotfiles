@@ -21,7 +21,6 @@ const _item = ({ name, description, iconName, launch }, window) => {
     const icon = Widget({
         type: 'icon',
         icon: iconName,
-        size: 38,
     });
     const btn = Widget({
         className: 'app',
@@ -51,14 +50,12 @@ const _listbox = () => {
         orientation: 'vertical',
     });
     box.push = item => {
-        box.add(Widget(item));
-        box.add(Widget({ type: 'separator', hexpand: true }));
-        box.show_all();
+        box.append(Widget(item));
+        box.append(Widget({ type: 'separator', hexpand: true }));
     };
     box.clear = () => {
-        box.get_children().forEach(ch => ch.destroy());
-        box.add(Widget({ type: 'separator', hexpand: true }));
-        box.show_all();
+        box.removeChildren();
+        box.append(Widget({ type: 'separator', hexpand: true }));
     };
     return box;
 };
@@ -74,24 +71,19 @@ const _layout = ({ entry, listbox }) => ({
                 type: 'overlay',
                 hexpand: true,
                 vexpand: true,
-                children: [
-                    {
-                        type: 'wallpaper',
-                    },
-                    {
-                        type: 'box',
-                        valign: 'center',
-                        className: 'entry',
-                        children: [
-                            {
-                                type: 'icon',
-                                icon: 'folder-saved-search-symbolic',
-                                size: 20,
-                            },
-                            entry,
-                        ],
-                    },
-                ],
+                child: { type: 'wallpaper' },
+                overlays: [{
+                    type: 'box',
+                    valign: 'center',
+                    className: 'entry',
+                    children: [
+                        {
+                            type: 'icon',
+                            icon: 'folder-saved-search-symbolic',
+                        },
+                        entry,
+                    ],
+                }],
             }],
         },
         {
@@ -103,7 +95,7 @@ const _layout = ({ entry, listbox }) => ({
 });
 
 Widget.widgets['applauncher'] = ({
-    placeholder = 'Search',
+    placeholderText = 'Search',
     windowName = 'applauncher',
     listbox = _listbox,
     item = _item,
@@ -114,7 +106,7 @@ Widget.widgets['applauncher'] = ({
     const entry = Widget({
         type: 'entry',
         hexpand: true,
-        placeholder,
+        placeholderText,
         text: '-',
         onAccept: ({ text }) => {
             const list = Applications.query(text);

@@ -3,32 +3,26 @@ const { Battery } = ags.Service;
 
 function _default(charging) {
     const items = [];
-    for (let i=0; i<=90; i+=10) {
-        items.push({
-            value: i,
-            widget: {
-                type: 'icon',
-                className: `${i} ${charging ? 'charging' : 'discharging'}`,
-                icon: `battery-level-${i}${charging ? '-charging' : ''}-symbolic`,
-            },
-        });
-    }
-    items.push({
-        value: 100,
-        widget: {
+    for (let i = 0; i <= 90; i += 10) {
+        items.push([`${i}`, {
             type: 'icon',
-            className: `100 ${charging ? 'charging' : 'discharging'}`,
-            icon: `battery-level-100${charging ? '-charged' : ''}-symbolic`,
-        },
-    });
+            className: `${i} ${charging ? 'charging' : 'discharging'}`,
+            icon: `battery-level-${i}${charging ? '-charging' : ''}-symbolic`,
+        }]);
+    }
+    items.push(['100', {
+        type: 'icon',
+        className: `100 ${charging ? 'charging' : 'discharging'}`,
+        icon: `battery-level-100${charging ? '-charged' : ''}-symbolic`,
+    }]);
     return items.reverse();
 }
 
 const _indicators = items => Widget({
-    type: 'dynamic',
+    type: 'stack',
     items,
-    connections: [[Battery, dynamic => {
-        dynamic.update(value => Battery.percent >= value);
+    connections: [[Battery, stack => {
+        stack.showChild(`${Math.floor(Battery.percent / 10) * 10}`);
     }]],
 });
 
@@ -38,17 +32,17 @@ Widget.widgets['battery/indicator'] = ({
     ...props
 }) => Widget({
     ...props,
-    type: 'dynamic',
+    type: 'stack',
     items: [
-        { value: true, widget: charging },
-        { value: false, widget: discharging },
+        ['true', charging],
+        ['false', discharging],
     ],
-    connections: [[Battery, dynamic => {
+    connections: [[Battery, stack => {
         const { charging, charged } = Battery;
-        dynamic.update(value => value === charging || value === charged);
-        dynamic.toggleClassName('charging', Battery.charging);
-        dynamic.toggleClassName('charged', Battery.charged);
-        dynamic.toggleClassName('low', Battery.percent < 30);
+        stack.showChild(`${charging || charged}`);
+        stack.toggleClassName('charging', Battery.charging);
+        stack.toggleClassName('charged', Battery.charged);
+        stack.toggleClassName('low', Battery.percent < 30);
     }]],
 });
 
@@ -62,7 +56,7 @@ Widget.widgets['battery/progress'] = props => Widget({
     ...props,
     type: 'progressbar',
     connections: [[Battery, progress => {
-        progress.setValue(Battery.percent/100);
+        progress.fraction = Battery.percent / 100;
         progress.toggleClassName('charging', Battery.charging);
         progress.toggleClassName('charged', Battery.charged);
         progress.toggleClassName('low', Battery.percent < 30);

@@ -1,60 +1,52 @@
 const { App, Widget } = ags;
 
 const padding = windowName => ({
-    type: 'eventbox',
+    type: 'box',
     className: 'padding',
     hexpand: true,
     vexpand: true,
-    onClick: () => App.toggleWindow(windowName),
+    onButtonPressed: () => App.toggleWindow(windowName),
 });
 
 const revealer = (windowName, transition, child) => ({
-    type: 'box',
+    type: 'revealer',
     style: 'padding: 1px;',
-    children: [{
-        type: 'revealer',
-        transition,
-        child,
-        duration: 350,
-        connections: [[App, (revealer, name, visible) => {
-            if (name === windowName)
-                revealer.reveal_child = visible;
-        }]],
-    }],
+    transition,
+    child,
+    duration: 350,
+    connections: [[App, (revealer, name, visible) => {
+        if (name === windowName)
+            revealer.reveal_child = visible;
+    }]],
 });
 
 const layouts = {
     'center': (windowName, child) => ({
         type: 'centerbox',
         className: 'shader',
-        children: [
-            padding(windowName),
-            {
-                type: 'centerbox',
-                orientation: 'vertical',
-                children: [
-                    padding(windowName),
-                    child,
-                    padding(windowName),
-                ],
-            },
-            padding(windowName),
-        ],
+        startWidget: padding(windowName),
+        endWidget: padding(windowName),
+        centerWidget: {
+            type: 'centerbox',
+            orientation: 'vertical',
+            startWidget: padding(windowName),
+            centerWidget: child,
+            endWidget: padding(windowName),
+        },
     }),
     'top': (windowName, child) => ({
         type: 'centerbox',
-        children: [
-            padding(windowName),
-            {
-                type: 'box',
-                orientation: 'vertical',
-                children: [
-                    revealer(windowName, 'slide_down', child),
-                    padding(windowName),
-                ],
-            },
-            padding(windowName),
-        ],
+        startWidget: padding(windowName),
+        endWidget: padding(windowName),
+        centerWidget: {
+            type: 'box',
+            orientation: 'vertical',
+            halign: 'center',
+            children: [
+                revealer(windowName, 'slide_down', child),
+                padding(windowName),
+            ],
+        },
     }),
     'topright': (windowName, child) => ({
         type: 'box',
@@ -88,4 +80,12 @@ const layouts = {
     }),
 };
 
-Widget.widgets['layout'] = ({ layout, window, child }) => Widget(layouts[layout](window, child));
+Widget.widgets['popup'] = ({ layout, windowName, child }) => Widget({
+    ...layouts[layout](windowName, child),
+    onKeyPressed: (_w, key) => {
+        if (key === imports.gi.Gdk.KEY_Escape) {
+            App.closeWindow(windowName);
+            return true;
+        }
+    },
+});

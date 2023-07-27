@@ -11,7 +11,7 @@ class IndicatorService extends Service {
     _delay = 1500;
     _count = 0;
 
-    popup(value, icon) {
+    popup(value, icon = '') {
         this.emit('popup', value, icon);
         this._count++;
         timeout(this._delay, () => {
@@ -32,7 +32,7 @@ class IndicatorService extends Service {
             icons[67] = 'audio-volume-high-symbolic';
             icons[101] = 'audio-volume-overamplified-symbolic';
             for (const i of [101, 67, 34, 1, 0]) {
-                if (i <= value*100)
+                if (i <= value * 100)
                     return icons[i];
             }
         };
@@ -45,7 +45,7 @@ class IndicatorService extends Service {
             const value = ags.Service.Brightness.screen;
             const icon = value => {
                 const icons = ['󰛩', '󱩎', '󱩏', '󱩐', '󱩑', '󱩒', '󱩓', '󱩔', '󱩕', '󱩖', '󰛨'];
-                return icons[Math.ceil(value*10)];
+                return icons[Math.ceil(value * 10)];
             };
             this.popup(value, icon(value));
         });
@@ -55,7 +55,7 @@ class IndicatorService extends Service {
         // brightness is async, so lets wait a bit
         timeout(10, () => {
             const value = ags.Service.Brightness.kbd;
-            this.popup((value*33+1)/100, 'keyboard-brightness-symbolic');
+            this.popup((value * 33 + 1) / 100, 'keyboard-brightness-symbolic');
         });
     }
 
@@ -74,48 +74,40 @@ class Indicator {
 }
 
 Widget.widgets['on-screen-indicator'] = ({ height = 300, width = 48 }) => Widget({
-    type: 'box',
+    type: 'revealer',
     className: 'indicator',
-    style: 'padding: 1px;',
-    children: [{
-        type: 'revealer',
-        transition: 'slide_left',
-        connections: [[Indicator, (revealer, value) => {
-            revealer.reveal_child = value > -1;
-        }]],
+    transition: 'slide_left',
+    connections: [[Indicator, (revealer, value) => {
+        revealer.reveal_child = value > -1;
+    }]],
+    child: {
+        type: 'progress',
+        width,
+        height,
+        vertical: true,
+        connections: [[Indicator, (progress, value) => progress.setValue(value)]],
         child: {
-            type: 'progress',
-            width,
-            height,
-            vertical: true,
-            connections: [[Indicator, (progress, value) => progress.setValue(value)]],
-            child: {
-                type: 'dynamic',
-                className: 'icon',
-                valign: 'start',
-                halign: 'center',
-                hexpand: true,
-                items: [
-                    {
-                        value: true, widget: {
-                            type: 'icon',
-                            halign: 'center',
-                            size: width,
-                            connections: [[Indicator, (icon, _v, name) => icon.icon_name = name || '']],
-                        },
-                    },
-                    {
-                        value: false, widget: {
-                            type: 'label',
-                            halign: 'center',
-                            connections: [[Indicator, (lbl, _v, name) => lbl.label = name || '']],
-                        },
-                    },
-                ],
-                connections: [[Indicator, (dynamic, _v, name) => {
-                    dynamic.update(value => value === !!lookUpIcon(name));
-                }]],
-            },
+            type: 'stack',
+            className: 'icon',
+            valign: 'start',
+            halign: 'center',
+            hexpand: true,
+            items: [
+                ['true', {
+                    type: 'icon',
+                    halign: 'center',
+                    hexpand: false,
+                    connections: [[Indicator, (icon, _v, name) => icon.iconName = name || '']],
+                }],
+                ['false', {
+                    type: 'label',
+                    halign: 'center',
+                    connections: [[Indicator, (lbl, _v, name) => lbl.label = name || '']],
+                }],
+            ],
+            connections: [[Indicator, (stack, _v, name) => {
+                stack.showChild(`${!!lookUpIcon(name)}`);
+            }]],
         },
-    }],
+    },
 });

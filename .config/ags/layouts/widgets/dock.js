@@ -2,31 +2,30 @@ const { Widget } = ags;
 const { Hyprland, Applications, Settings } = ags.Service;
 const { timeout, execAsync } = ags.Utils;
 
-const _appButton = (iconSize, icon) => ({
+const _appButton = (icon, tooltip) => ({
     type: 'button',
+    // tooltips currently crash on Hyprland
+    // tooltip,
     child: {
         type: 'box',
         children: [{
             type: 'overlay',
-            children: [
-                typeof icon === 'string'
-                    ? {
-                        type: 'icon',
-                        size: iconSize,
-                        icon,
-                    } : icon,
-                {
-                    type: 'box',
-                    className: 'indicator',
-                    valign: Settings.layout === 'unity' ? 'center' : 'end',
-                    halign: Settings.layout === 'unity' ? 'start' : 'center',
-                },
-            ],
+            child: typeof icon === 'string'
+                ? {
+                    type: 'icon',
+                    icon,
+                } : icon,
+            overlays: [{
+                type: 'box',
+                className: 'indicator',
+                valign: Settings.layout === 'unity' ? 'center' : 'end',
+                halign: Settings.layout === 'unity' ? 'start' : 'center',
+            }],
         }],
     },
 });
 
-const _pins = ({ iconSize, list, orientation }) => ({
+const _pins = ({ list, orientation }) => ({
     type: 'box',
     homogeneous: true,
     orientation,
@@ -34,7 +33,7 @@ const _pins = ({ iconSize, list, orientation }) => ({
         .map(([term, single]) => ({ app: Applications.query(term)?.[0], term, single }))
         .filter(({ app }) => app !== undefined)
         .map(({ app, term, single = true }) => ({
-            ..._appButton(iconSize, app.iconName),
+            ..._appButton(app.iconName, app.name),
             onClick: () => {
                 if (!single)
                     return app.launch();
@@ -46,7 +45,6 @@ const _pins = ({ iconSize, list, orientation }) => ({
 
                 app.launch();
             },
-            tooltip: app.name,
             className: !single ? 'single' : '',
             connections: [[Hyprland, button => {
                 if (!single)
@@ -60,13 +58,12 @@ const _pins = ({ iconSize, list, orientation }) => ({
 
                 button.toggleClassName('nonrunning', !running);
                 button.toggleClassName('focused', Hyprland.active.client.address === running.address?.substring(2));
-                button.set_tooltip_text(running ? running.title : app.name);
+                // button.set_tooltip_text(running ? running.title : app.name);
             }]],
         })),
 });
 
 Widget.widgets['dock'] = ({
-    iconSize = 48,
     launcher = 'view-app-grid-symbolic',
     orientation,
     ...props
@@ -76,13 +73,11 @@ Widget.widgets['dock'] = ({
     orientation,
     children: [
         ...(launcher ? [{
-            tooltip: 'Applications',
             onClick: () => ags.App.toggleWindow('applauncher'),
-            ..._appButton(iconSize, launcher),
+            ..._appButton(launcher, 'Applications'),
             className: 'launcher nonrunning',
         }] : []),
         _pins({
-            iconSize,
             orientation,
             list: [
                 ['firefox', false],
@@ -100,7 +95,7 @@ Widget.widgets['dock'] = ({
             valign: 'center',
             className: 'separator',
             connections: [[Hyprland, box => {
-                box.visible = box.get_parent().get_children()[launcher ? 3 : 2].get_children().length > 0;
+                box.visible = !!box.get_parent().get_last_child().get_first_child();
             }]],
         },
         {
@@ -108,8 +103,7 @@ Widget.widgets['dock'] = ({
             orientation,
             skip: ['discord', 'caprine', 'nautilus', 'spotify', 'transmission'],
             item: ({ iconName }, { address, title }) => ({
-                ..._appButton(iconSize, iconName),
-                tooltip: title,
+                ..._appButton(iconName, title),
                 className: Hyprland.active.client.address === address.substring(2) ? 'focused' : 'nonfocused',
                 onClick: () => execAsync(`hyprctl dispatch focuswindow address:${address}`),
             }),
@@ -118,35 +112,21 @@ Widget.widgets['dock'] = ({
 });
 
 Widget.widgets['floating-dock'] = () => Widget({
-    type: 'eventbox',
+    transition: 'slide_up',
+    style: 'padding: 3px; border-top: 3px solid transparent;',
+    duration: 300,
+    type: 'revealer',
     className: 'floating-dock',
-    valign: 'start',
-    onHover: box => {
-        timeout(300, () => box._revealed = true);
-        box.get_child().get_children()[0].reveal_child = true;
+    onHoverEnter: revealer => {
+        timeout(300, () => revealer._revealed = true);
+        revealer.reveal_child = true;
     },
-    onHoverLost: box => {
-        if (!box._revealed)
+    onHoverLeave: revealer => {
+        if (!revealer._revealed)
             return;
 
-        timeout(300, () => box._revealed = false);
-        box.get_child().get_children()[0].reveal_child = false;
+        timeout(300, () => revealer._revealed = false);
+        revealer.reveal_child = false;
     },
-    child: {
-        type: 'box',
-        orientation: 'vertical',
-        style: 'padding: 1px;',
-        children: [
-            {
-                transition: 'slide_up',
-                type: 'revealer',
-                child: { type: 'dock', className: 'dock' },
-            },
-            {
-                type: 'box',
-                className: 'padding',
-                style: 'padding: 2px;',
-            },
-        ],
-    },
+    child: { type: 'dock', className: 'dock' },
 });

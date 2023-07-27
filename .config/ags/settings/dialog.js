@@ -65,7 +65,7 @@ const color = (title, prop) => row(title, {
             valign: 'center',
             connections: [
                 ['color-set', w => {
-                    w.get_parent().get_children()[0].set_text(w.rgba.to_string());
+                    w.get_parent().get_first_child().set_text(w.rgba.to_string());
                     Settings.setStyle(prop, w.rgba.to_string());
                 }],
             ],
@@ -153,11 +153,10 @@ const layout = pages => ({
             }]],
             connections: [[Pages, box => {
                 if (box._child)
-                    box._child.destroy();
+                    box.remove(box._child);
 
                 box._child = ags.Widget(box._pages[Pages.page]);
-                box.add(box._child);
-                box.show_all();
+                box.append(box._child);
             }]],
         },
     ],
@@ -173,7 +172,7 @@ const layoutRow = row('Layout', {
             'topbar', 'bottombar', 'unity',
         ]],
         ['step', (box, step) => {
-            const label = box.get_children()[0];
+            const label = box.get_first_child();
             const max = box._layouts.length - 1;
             let index = box._layouts.indexOf(label.label) + step;
 
@@ -214,7 +213,7 @@ const layoutRow = row('Layout', {
 
 var dialog = () => {
     const win = new Gtk.Window({ name: 'settings' });
-    win.add(ags.Widget(layout({
+    win.set_child(ags.Widget(layout({
         general: {
             type: 'box',
             orientation: 'vertical',

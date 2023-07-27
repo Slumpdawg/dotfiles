@@ -2,11 +2,12 @@ const { Widget } = ags;
 const { Network } = ags.Service;
 
 const icons = [
-    { value: 80, widget: { type: 'icon', icon: 'network-wireless-signal-excellent-symbolic' } },
-    { value: 60, widget: { type: 'icon', icon: 'network-wireless-signal-good-symbolic' } },
-    { value: 40, widget: { type: 'icon', icon: 'network-wireless-signal-ok-symbolic' } },
-    { value: 20, widget: { type: 'icon', icon: 'network-wireless-signal-weak-symbolic' } },
-    { value: 0,  widget: { type: 'icon', icon: 'network-wireless-signal-none-symbolic' } },
+    ['100', { type: 'icon', icon: 'network-wireless-signal-excellent-symbolic' }],
+    ['80', { type: 'icon', icon: 'network-wireless-signal-excellent-symbolic' }],
+    ['60', { type: 'icon', icon: 'network-wireless-signal-good-symbolic' }],
+    ['40', { type: 'icon', icon: 'network-wireless-signal-ok-symbolic' }],
+    ['20', { type: 'icon', icon: 'network-wireless-signal-weak-symbolic' }],
+    ['0', { type: 'icon', icon: 'network-wireless-signal-none-symbolic' }],
 ];
 
 Widget.widgets['network/ssid-label'] = props => Widget({
@@ -28,26 +29,26 @@ Widget.widgets['network/wired-indicator'] = ({
     connected = { type: 'icon', icon: 'network-wired-symbolic' },
     unknown = { type: 'icon', icon: 'content-loading-symbolic' },
 }) => Widget({
-    type: 'dynamic',
+    type: 'stack',
     items: [
-        { value: 'unknown', widget: unknown },
-        { value: 'disconnected', widget: disconnected },
-        { value: 'disabled', widget: disabled },
-        { value: 'connected', widget: connected },
-        { value: 'connecting', widget: connecting },
+        ['unknown', unknown],
+        ['disconnected', disconnected],
+        ['disabled', disabled],
+        ['connected', connected],
+        ['connecting', connecting],
     ],
-    connections: [[Network, dynamic => dynamic.update(value => {
+    connections: [[Network, stack => stack.showChild(() => {
         if (!Network.wired)
-            return;
+            return 'unknown';
 
         const { internet } = Network.wired;
         if (internet === 'connected' || internet === 'connecting')
-            return value === internet;
+            internet;
 
         if (Network.connectivity !== 'full')
-            return value === 'disconnected';
+            'disconnected';
 
-        return value === 'disabled';
+        return 'disabled';
     })]],
 });
 
@@ -57,28 +58,28 @@ Widget.widgets['network/wifi-indicator'] = ({
     connecting = { type: 'icon', icon: 'network-wireless-acquiring-symbolic' },
     connected = icons,
 }) => Widget({
-    type: 'dynamic',
+    type: 'stack',
     items: [
-        { value: 'disabled', widget: disabled },
-        { value: 'disconnected', widget: disconnected },
-        { value: 'connecting', widget: connecting },
+        ['disabled', disabled],
+        ['disconnected', disconnected],
+        ['connecting', connecting],
         ...connected,
     ],
-    connections: [[Network, dynamic => dynamic.update(value => {
+    connections: [[Network, stack => stack.showChild(() => {
         if (!Network.wifi)
-            return;
+            return 'disabled';
 
         const { internet, enabled, strength } = Network.wifi;
         if (internet === 'connected')
-            return value <= strength;
+            return `${Math.floor(strength / 20) * 20}`;
 
         if (internet === 'connecting')
-            return value === 'connecting';
+            return 'connecting';
 
         if (enabled)
-            return value === 'disconnected';
+            return 'disconnected';
 
-        return value === 'disabled';
+        return 'disabled';
     })]],
 });
 
@@ -86,14 +87,13 @@ Widget.widgets['network/indicator'] = ({
     wifi = { type: 'network/wifi-indicator' },
     wired = { type: 'network/wired-indicator' },
 }) => Widget({
-    type: 'dynamic',
+    type: 'stack',
     items: [
-        { value: 'wired', widget: wired },
-        { value: 'wifi', widget: wifi },
+        ['wired', wired],
+        ['wifi', wifi],
     ],
-    connections: [[Network, dynamic => {
-        const primary = Network.primary || 'wifi';
-        dynamic.update(value => value === primary);
+    connections: [[Network, stack => {
+        stack.showChild(Network.primary || 'wifi');
     }]],
 });
 
@@ -111,14 +111,14 @@ Widget.widgets['network/wifi-selection'] = props => Widget({
     type: 'box',
     orientation: 'vertical',
     connections: [[Network, box => {
-        box.get_children().forEach(ch => ch.destroy());
+        box.removeChildren();
         Network.wifi?.accessPoints.forEach(ap => {
-            box.add(Widget({
+            box.append(Widget({
                 type: 'button',
                 child: {
                     type: 'box',
                     children: [
-                        icons.find(({ value }) => value <= ap.strength).widget,
+                        icons.find(([value]) => Number(value) <= ap.strength).widget,
                         {
                             type: 'label',
                             label: ap.ssid,
@@ -134,6 +134,5 @@ Widget.widgets['network/wifi-selection'] = props => Widget({
                 onClick: `nmcli device wifi connect ${ap.bssid}`,
             }));
         });
-        box.show_all();
     }]],
 });

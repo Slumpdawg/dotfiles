@@ -27,6 +27,8 @@ Widget.widgets['dashboard/popup-content'] = () => Widget({
                     type: 'datemenu/popup-content',
                     className: 'datemenu',
                 },
+                // TODO
+                // { type: 'events' },
             ],
         },
         {
